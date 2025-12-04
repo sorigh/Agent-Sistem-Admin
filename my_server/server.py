@@ -1,21 +1,14 @@
 from fastmcp import FastMCP
-from fastapi import Header, HTTPException
+from fastapi import Request, Response
+from starlette.middleware import Middleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from typing import Annotated
 import os
-import logging
-
+import logging 
 mcp = FastMCP("My MCP Server")
 
-
-def verify_key(key: str | None):
-    expected_key = os.getenv("MCP_API_KEY")
-    if not expected_key:
-        return True # Sau False dacă vreți să forțați auth chiar dacă lipsesc env vars
-    if key != expected_key:
-        raise HTTPException(status_code=401, detail="Invalid API Key")
-
 @mcp.tool()
-def list_directory(directory: str, x_api_key: Annotated[str | None, Header()] = None) -> list[str]:
+def list_directory(directory: str = None) -> list[str]:
     """
     List all files and directories in the given directory.
     
@@ -30,7 +23,7 @@ def list_directory(directory: str, x_api_key: Annotated[str | None, Header()] = 
         return [f"Error: {str(e)}"]
 
 @mcp.tool()
-def get_file_content(dir_path: str, x_api_key: Annotated[str | None, Header()] = None) -> str:
+def get_file_content(dir_path: str = None) -> str:
     """
     Reads and returns the full text content of a specified file.
     
@@ -46,7 +39,7 @@ def get_file_content(dir_path: str, x_api_key: Annotated[str | None, Header()] =
         return f"Error: {str(e)}"
     
 @mcp.tool()
-def write_file(file_path: str, content: str, x_api_key: Annotated[str | None, Header()] = None) -> str:
+def write_file(file_path: str, content: str = None) -> str:
     """
     Writes or overwrites content to a specified file.
     
@@ -64,7 +57,7 @@ def write_file(file_path: str, content: str, x_api_key: Annotated[str | None, He
     
 
 @mcp.tool()
-def create_directory(directory_path: str, x_api_key: Annotated[str | None, Header()] = None) -> str:
+def create_directory(directory_path: str = None) -> str:
     """
     Creates a new directory at the specified path.
     
@@ -80,7 +73,7 @@ def create_directory(directory_path: str, x_api_key: Annotated[str | None, Heade
 
 
 @mcp.tool()
-def delete_file(file_path: str, x_api_key: Annotated[str | None, Header()] = None) -> str:
+def delete_file(file_path: str = None) -> str:
     """
     Deletes a specified file. Should be used with caution.
     
@@ -96,5 +89,6 @@ def delete_file(file_path: str, x_api_key: Annotated[str | None, Header()] = Non
     
 
 if __name__ == "__main__":
-    
+    logging.basicConfig(level=logging.INFO)
+
     mcp.run(transport="http", host="0.0.0.0", port=8100)
