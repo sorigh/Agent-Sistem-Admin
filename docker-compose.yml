@@ -1,0 +1,50 @@
+services:
+  # 1. Ollama
+  ollama:
+    container_name: ollama
+    build:
+      context: ./ollama
+      dockerfile: ./Dockerfile
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11435:11434"
+    networks:
+      aso_network:
+
+  # 2. MCP Server Service
+  mcp-server:
+    container_name: mcp-server
+    build:
+      context: ./my_server
+      dockerfile: ./Dockerfile
+    ports:
+      - "8101:8100"
+    networks:
+      aso_network:
+    environment:
+      MCP_API_KEY: "secure_and_safe_key"
+
+  # 3. ADK Web and Agent Service
+  adk-web:
+    container_name: adk-agent
+    build:
+      context: ./deploy-agent
+      dockerfile: ./Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./deploy-agent/my_agent:/app/my_agent
+    environment:
+      OLLAMA_API_BASE: "http://ollama:11434"
+      URL_MCP: "http://mcp-server:8100/mcp"
+      MCP_API_KEY: "secure_and_safe_key"
+    networks:
+      aso_network:
+
+volumes:
+  ollama:
+
+networks:
+  aso_network:
+    external: true
